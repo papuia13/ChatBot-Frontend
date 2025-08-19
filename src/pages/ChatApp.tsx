@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatInterface, { Message } from "@/components/chat/ChatInterface";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useSubscription } from "urql";
+import {
+  SUB_CHATS,
+  SUB_MESSAGES,
+  MUT_CREATE_CHAT,
+  MUT_INSERT_USER_MESSAGE,
+  MUT_SEND_MESSAGE,
+} from "@/lib/graphql";
 
 interface Chat {
   id: string;
@@ -22,95 +30,79 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
 
-  // Load demo data
-  useEffect(() => {
-    const demoChats: Chat[] = [
-      {
-        id: "1",
-        title: "Getting Started",
-        lastMessage: "Welcome! How can I help you today?",
-        timestamp: "2 min ago",
-        messages: [
-          {
-            id: "1",
-            content: "Hello! Welcome to the chatbot. How can I assist you today?",
-            isBot: true,
-            timestamp: new Date(Date.now() - 120000).toISOString(),
-          }
-        ]
-      }
-    ];
-    setChats(demoChats);
-    setActiveChat("1");
-  }, []);
+  // GraphQL: subscribe to chats
+  const [chatsSub] = useSubscription({ query: SUB_CHATS });
 
-  const handleNewChat = () => {
-    const newChatId = Date.now().toString();
-    const newChat: Chat = {
-      id: newChatId,
-      title: "New Chat",
-      lastMessage: "Start a conversation...",
-      timestamp: "now",
-      messages: []
-    };
-    
-    setChats(prev => [newChat, ...prev]);
-    setActiveChat(newChatId);
-    
-    toast({
-      title: "New chat created",
-      description: "You can start a new conversation now.",
-    });
+  // Build chats state from subscription
+  useEffect(() => {
+    if (chatsSub.data?.chats) {
+      const mapped: Chat[] = chatsSub.data.chats.map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        lastMessage: "",
+        timestamp: new Date(c.updated_at).toISOString(),
+        messages: [],
+      }));
+      setChats(mapped);
+      if (!activeChat && mapped.length > 0) setActiveChat(mapped[0].id);
+    }
+  }, [chatsSub.data]);
+
+  // Messages subscription for active chat
+  const pauseMessages = useMemo(() => !activeChat, [activeChat]);
+  const [messagesSub] = useSubscription(
+    { query: SUB_MESSAGES, variables: { chat_id: activeChat }, pause: pauseMessages }
+  );
+
+  useEffect(() => {
+    if (!messagesSub.data || !activeChat) return;
+    const msgs: Message[] = messagesSub.data.messages.map((m: any) => ({
+      id: m.id,
+      content: m.content,
+      isBot: m.role !== "user",
+      timestamp: new Date(m.created_at).toISOString(),
+    }));
+    setChats(prev => prev.map(chat => chat.id === activeChat ? {
+      ...chat,
+      messages: msgs,
+      lastMessage: msgs.length ? msgs[msgs.length - 1].content : "",
+      timestamp: msgs.length ? msgs[msgs.length - 1].timestamp : chat.timestamp,
+    } : chat));
+  }, [messagesSub.data, activeChat]);
+
+  // Mutations
+  const [, createChat] = useMutation(MUT_CREATE_CHAT);
+  const [, insertUserMessage] = useMutation(MUT_INSERT_USER_MESSAGE);
+  const [, sendMessageAction] = useMutation(MUT_SEND_MESSAGE);
+
+  const handleNewChat = async () => {
+    const result = await createChat({ title: "New Chat" });
+    if (result.error) {
+      toast({ title: "Failed to create chat", description: result.error.message });
+      return;
+    }
+    const id = result.data?.insert_chats_one?.id as string | undefined;
+    if (id) {
+      setActiveChat(id);
+      toast({ title: "New chat created", description: "You can start a new conversation now." });
+    }
   };
 
   const handleSendMessage = async (content: string) => {
     if (!activeChat) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content,
-      isBot: false,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Add user message
-    setChats(prev => prev.map(chat => 
-      chat.id === activeChat 
-        ? {
-            ...chat,
-            messages: [...chat.messages, userMessage],
-            lastMessage: content,
-            timestamp: "now",
-            title: chat.messages.length === 0 ? content.slice(0, 30) + "..." : chat.title
-          }
-        : chat
-    ));
-
-    // Show typing indicator
+    // Insert user message
+    const insertRes = await insertUserMessage({ chat_id: activeChat, content });
+    if (insertRes.error) {
+      toast({ title: "Failed to send", description: insertRes.error.message });
+      return;
+    }
+    // Show typing while Action runs. Assistant message will arrive via subscription.
     setIsTyping(true);
-
-    // Simulate bot response
-    setTimeout(() => {
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `Thank you for your message: "${content}". This is a demo response. In a real implementation, this would be connected to your backend GraphQL API and n8n workflow for AI responses.`,
-        isBot: true,
-        timestamp: new Date().toISOString(),
-      };
-
-      setChats(prev => prev.map(chat => 
-        chat.id === activeChat 
-          ? {
-              ...chat,
-              messages: [...chat.messages, botMessage],
-              lastMessage: "Bot response received",
-              timestamp: "now"
-            }
-          : chat
-      ));
-
-      setIsTyping(false);
-    }, 2000);
+    const actionRes = await sendMessageAction({ chat_id: activeChat, content });
+    if (actionRes.error) {
+      toast({ title: "Bot error", description: actionRes.error.message });
+    }
+    setIsTyping(false);
   };
 
   const currentChat = chats.find(chat => chat.id === activeChat);
