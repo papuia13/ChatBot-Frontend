@@ -1,10 +1,43 @@
-# Wizard AI – Chatbot
+# 🧙 Wizard AI – Intelligent Chatbot
 
-## Project info
+<div align="center">
+  <p>An intelligent chatbot interface with user authentication, conversation history, and AI-powered responses</p>
+  <img src="public/placeholder.svg" alt="Chatbot Preview" width="600">
+</div>
 
-This repository contains the Wizard AI chatbot frontend built with Vite + React + TypeScript + Tailwind + shadcn-ui, integrating with Nhost/Hasura and n8n.
+## 🚀 Quick Start
 
-## Authentication & Permissions
+### Prerequisites
+- Node.js 18+ and npm
+- Nhost account (free tier available)
+- OpenRouter API key (for AI responses)
+- n8n account (free tier available)
+
+### Local Development
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Copy `.env.example` to `.env` and fill in your credentials
+4. Start the dev server: `npm run dev`
+5. Open http://localhost:8080
+
+## 📋 Project Overview
+
+Wizard AI is a modern chatbot interface that combines:
+
+- **Frontend**: React + TypeScript + Vite
+- **UI**: shadcn-ui + Tailwind CSS
+- **Backend**: Nhost (Auth + Database)
+- **AI**: OpenRouter API (multiple LLM models)
+- **Workflow Automation**: n8n
+
+### Key Features
+- 🔐 User authentication & authorization
+- 💬 Real-time chat interface
+- 📚 Conversation history
+- 🎨 Dark/Light mode
+- ⚡ Optimized performance
+
+## 🔐 Authentication & Security
 
 ### Nhost Authentication
 - User authentication is handled by Nhost's built-in auth system
@@ -29,33 +62,58 @@ This repository contains the Wizard AI chatbot frontend built with Vite + React 
 - JWT tokens are stored in HTTP-only cookies for security
 - Automatic token refresh is handled by the Nhost client
 
-## Development Setup
+## 🛠️ Complete Setup Guide
 
 ### 1. Nhost Setup
 1. Sign up at [Nhost](https://nhost.io/)
-2. Create a new project and note your subdomain and region
-3. Nhost will automatically set up authentication and database for you
+2. Create a new project
+3. Note your project's subdomain and region
+4. Enable Authentication and Database services
 
-### 2. Database Setup in Hasura
-1. From Nhost dashboard, click on "Hasura" to open the Hasura console
-2. In Hasura, create the following tables:
-   - `chats`
-     - id (uuid, primary key, default: `gen_random_uuid()`)
-     - user_id (uuid, foreign key to auth.users)
-     - title (text)
-     - created_at (timestamptz, default: `now()`)
-   - `messages`
-     - id (uuid, primary key, default: `gen_random_uuid()`)
-     - chat_id (uuid, foreign key to chats)
-     - role (text, either 'user' or 'assistant')
-     - content (text)
-     - created_at (timestamptz, default: `now()`)
+### 2. Database Configuration
+1. Open Hasura Console from Nhost dashboard
+2. Create required tables with these SQL commands:
 
-3. Set up permissions:
-   - For both tables, create a role `user` with:
-     - Select: With custom check `{"user_id":{"_eq":"X-Hasura-User-Id"}}`
-     - Insert: With same custom check
-     - Update/Delete: With same custom check
+```sql
+-- Create chats table
+CREATE TABLE public.chats (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) NOT NULL,
+  title text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Create messages table
+CREATE TABLE public.messages (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  chat_id uuid REFERENCES public.chats(id) ON DELETE CASCADE NOT NULL,
+  role text NOT NULL CHECK (role IN ('user', 'assistant')),
+  content text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Enable Row Level Security
+ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+-- Set up permissions
+CREATE POLICY "Users can view their own chats" 
+ON public.chats FOR SELECT 
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own chats"
+ON public.chats FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- Similar policies for messages table
+CREATE POLICY "Users can view their own messages"
+ON public.messages FOR SELECT
+USING (EXISTS (
+  SELECT 1 FROM public.chats 
+  WHERE public.chats.id = public.messages.chat_id 
+  AND public.chats.user_id = auth.uid()
+));
+
 
 ### 3. Create Action for Sending Messages
 1. In Hasura, go to "Actions" tab
@@ -118,7 +176,7 @@ VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
 3. Access the app at `http://localhost:8080`
 4. The app will handle user authentication automatically through Nhost
 
-## How to Use
+## 🎯 How to Use
 
 ### Getting Started
 1. **Access the Chatbot**
@@ -188,15 +246,27 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
+## 🛠️ Tech Stack
 
-This project is built with:
+### Core Technologies
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, shadcn/ui
+- **State Management**: React Query
+- **Form Handling**: React Hook Form
+- **UI Components**: Radix UI Primitives
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Backend & Services
+- **Authentication**: Nhost Auth
+- **Database**: PostgreSQL (via Nhost)
+- **API**: GraphQL (Hasura)
+- **AI**: OpenRouter API
+- **Workflows**: n8n
+
+### Development Tools
+- **Package Manager**: npm
+- **Linting**: ESLint
+- **Formatting**: Prettier
+- **Version Control**: Git
 
 ## Deploying to Netlify
 
