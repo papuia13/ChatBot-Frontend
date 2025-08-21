@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, Pencil, Check, X } from "lucide-react";
+import { Send, Bot, Pencil, Check, X, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,9 +18,10 @@ interface ChatInterfaceProps {
   isTyping: boolean;
   chatTitle: string;
   onRenameTitle?: (newTitle: string) => Promise<void> | void;
+  onOpenSidebar?: () => void;
 }
 
-const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameTitle }: ChatInterfaceProps) => {
+const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameTitle, onOpenSidebar }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -73,6 +74,18 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
       {/* Header */}
       <div className="p-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-2">
+          {/* Mobile hamburger to open sidebar */}
+          {onOpenSidebar && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={onOpenSidebar}
+              aria-label="Open chat menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
           {isEditingTitle ? (
             <>
               <Input

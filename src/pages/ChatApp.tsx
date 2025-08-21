@@ -398,6 +398,7 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
                 isTyping={isTyping}
                 chatTitle={currentChat?.title ?? "New Chat"}
                 onRenameTitle={handleRenameTitle}
+                onOpenSidebar={() => setSidebarOpen(true)}
               />
             </div>
           ) : (
