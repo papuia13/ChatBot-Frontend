@@ -91,7 +91,7 @@ const ChatSidebar = ({
   };
 
   return (
-    <div className="w-80 bg-chat-sidebar border-r border-border/50 flex flex-col h-full overflow-x-hidden">
+    <div className="w-full md:w-80 bg-chat-sidebar border-r border-border/50 flex flex-col h-full overflow-x-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border/50">
         <div className="flex items-center justify-between mb-4">

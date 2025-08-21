@@ -72,7 +72,7 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="p-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <div className="p-3 md:p-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           {/* Mobile hamburger to open sidebar */}
           {onOpenSidebar && (
@@ -114,7 +114,7 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
           ) : (
             <>
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <h1 className="text-lg font-semibold text-foreground truncate">
+                <h1 className="text-base md:text-lg font-semibold text-foreground truncate">
                   {chatTitle || "New Chat"}
                 </h1>
                 {onRenameTitle && (
@@ -129,7 +129,7 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
         {messages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md mx-auto">
@@ -164,7 +164,7 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
                 
                 <div
                   className={cn(
-                    "max-w-[70%] rounded-xl px-4 py-2 relative",
+                    "max-w-[85%] md:max-w-[70%] rounded-xl px-3 md:px-4 py-2 relative",
                     message.isBot
                       ? "bg-card text-card-foreground border border-border/50"
                       : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"
@@ -211,13 +211,13 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-border/50 bg-card/50 backdrop-blur-sm">
+      <div className="p-3 md:p-4 border-t border-border/50 bg-card/50 backdrop-blur-sm sticky bottom-0" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 bg-chat-input border-border/50 focus:border-primary transition-colors"
+            className="flex-1 bg-chat-input border-border/50 focus:border-primary transition-colors h-10 md:h-11"
             disabled={isTyping}
           />
           <Button
