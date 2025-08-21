@@ -6,6 +6,10 @@ export const SUB_CHATS = gql/* GraphQL */ `
       id
       title
       updated_at
+      messages(order_by: {created_at: desc}, limit: 1) {
+        content
+        created_at
+      }
     }
   }
 `
@@ -50,3 +54,22 @@ export const MUT_SEND_MESSAGE = gql/* GraphQL */ `
     }
   }
 `
+
+export const MUT_UPDATE_CHAT_TITLE = gql/* GraphQL */ `
+  mutation UpdateChatTitle($id: uuid!, $title: String!) {
+    update_chats_by_pk(pk_columns: { id: $id }, _set: { title: $title }) {
+      id
+      title
+      updated_at
+    }
+  }
+`
+
+export const MUT_DELETE_CHAT = gql/* GraphQL */ `
+  mutation DeleteChat($id: uuid!) {
+    delete_chats_by_pk(id: $id) {
+      id
+    }
+  }
+`
+

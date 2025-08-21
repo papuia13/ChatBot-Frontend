@@ -8,7 +8,6 @@ import NotFound from "./pages/NotFound";
 import nhost from "@/lib/nhost";
 import { NhostProvider } from "@nhost/react";
 import { NhostUrqlProvider } from "@nhost/react-urql";
-import JwtButton from "@/components/dev/JwtButton";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +25,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-          {import.meta.env.DEV && <JwtButton />}
+          {/* JWT dev button removed */}
         </TooltipProvider>
       </QueryClientProvider>
     </NhostUrqlProvider>

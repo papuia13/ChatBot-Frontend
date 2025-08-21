@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot } from "lucide-react";
+import { Send, Bot, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,10 +17,13 @@ interface ChatInterfaceProps {
   onSendMessage: (content: string) => void;
   isTyping: boolean;
   chatTitle: string;
+  onRenameTitle?: (newTitle: string) => Promise<void> | void;
 }
 
-const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle }: ChatInterfaceProps) => {
+const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameTitle }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -46,13 +49,70 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle }: ChatInt
     });
   };
 
+  const startEdit = () => {
+    setTitleDraft(chatTitle || "");
+    setIsEditingTitle(true);
+  };
+
+  const cancelEdit = () => {
+    setIsEditingTitle(false);
+  };
+
+  const saveEdit = async () => {
+    const next = titleDraft.trim();
+    if (!next) return;
+    try {
+      await onRenameTitle?.(next);
+    } finally {
+      setIsEditingTitle(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       {/* Header */}
       <div className="p-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
-        <h1 className="text-lg font-semibold text-foreground">
-          {chatTitle || "New Chat"}
-        </h1>
+        <div className="flex items-center gap-2">
+          {isEditingTitle ? (
+            <>
+              <Input
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                className="max-w-sm"
+                placeholder="Chat title"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                  }
+                }}
+              />
+              <Button size="sm" onClick={saveEdit} className="bg-primary hover:bg-primary-glow">
+                <Check className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                <X className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <h1 className="text-lg font-semibold text-foreground truncate">
+                  {chatTitle || "New Chat"}
+                </h1>
+                {onRenameTitle && (
+                  <Button size="icon" variant="ghost" onClick={startEdit} title="Rename">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
