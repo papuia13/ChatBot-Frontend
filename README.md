@@ -1,4 +1,4 @@
-# Wizard AI – Chatbot Frontend
+# Wizard AI – Chatbot
 
 ## Project info
 
