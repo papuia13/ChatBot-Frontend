@@ -4,6 +4,61 @@
 
 This repository contains the Wizard AI chatbot frontend built with Vite + React + TypeScript + Tailwind + shadcn-ui, integrating with Nhost/Hasura and n8n.
 
+## Development Setup
+
+### Prerequisites
+- Node.js 18+ and npm
+- Nhost CLI (`npm install -g nhost`)
+- Docker (for local Hasura)
+- n8n account
+- OpenRouter API key
+
+### 1. Nhost Setup
+1. Sign up at [Nhost](https://nhost.io/)
+2. Create a new project and note your subdomain and region
+3. Install Nhost CLI and login:
+   ```bash
+   npm install -g nhost
+   nhost login
+   ```
+4. Link your project:
+   ```bash
+   nhost link
+   ```
+
+### 2. Hasura Configuration
+1. Enable Hasura in your Nhost dashboard
+2. Set up your database schema and relationships
+3. Configure permissions and roles as needed
+4. Set up event triggers for real-time functionality
+
+### 3. n8n Integration
+1. Create an account at [n8n.io](https://n8n.io/)
+2. Set up a new workflow
+3. Add the Webhook node and configure it to receive requests
+4. Add the OpenRouter node and configure with your API key
+5. Set up any additional processing nodes as needed
+
+### 4. Environment Variables
+Create a `.env` file in the root directory with:
+```
+VITE_NHOST_SUBDOMAIN=your-nhost-subdomain
+VITE_NHOST_REGION=your-nhost-region
+VITE_OPENROUTER_API_KEY=your-openrouter-key
+VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
+```
+
+### 5. Running Locally
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Access the app at `http://localhost:8080`
+
 ## How to Use
 
 ### Getting Started
