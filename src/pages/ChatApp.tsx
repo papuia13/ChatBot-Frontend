@@ -203,11 +203,11 @@ const ChatApp = ({ userDisplayName, userEmail, onSignOut }: ChatAppProps) => {
     // optimistic update
     setChats(prev => prev.map(c => c.id === activeChat ? { ...c, title: newTitle } : c));
     const res = await updateChatTitle({ id: activeChat, title: newTitle });
-    if (res.error) {
-      toast({ title: "Failed to rename chat", description: res.error.message });
-    } else {
-      toast({ title: "Chat renamed" });
-    }
+    // if (res.error) {
+    //   toast({ title: "Failed to rename chat", description: res.error.message });
+    // } else {
+    //   toast({ title: "Chat renamed" });
+    // }
   };
 
   // Sidebar actions
