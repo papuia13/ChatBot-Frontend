@@ -1,18 +1,12 @@
-# Welcome to your Lovable project
+# Wizard AI – Chatbot Frontend
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/11142566-3afe-42dd-a62b-c94a2a9260a3
+This repository contains the Wizard AI chatbot frontend built with Vite + React + TypeScript + Tailwind + shadcn-ui, integrating with Nhost/Hasura and n8n.
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/11142566-3afe-42dd-a62b-c94a2a9260a3) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
@@ -60,14 +54,19 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Deploying to Netlify
 
-Simply open [Lovable](https://lovable.dev/projects/11142566-3afe-42dd-a62b-c94a2a9260a3) and click on Share -> Publish.
+1. Build command: `npm run build`
+2. Publish directory: `dist`
+3. Environment variables (Site settings → Build & deploy → Environment):
+   - `VITE_NHOST_SUBDOMAIN=your-nhost-subdomain`
+   - `VITE_NHOST_REGION=your-nhost-region`
+4. Deploy: Connect this repo to Netlify and trigger a deploy, or drag-and-drop the `dist` folder in the Netlify UI.
 
-## Can I connect a custom domain to my Lovable project?
+After deploy, verify:
+- Page title, favicon, and social cards render correctly.
+- API/auth flows against Nhost work in production.
 
-Yes, you can!
+## Local development
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The dev server runs on the port configured in `vite.config.ts` (currently `8080`). Visit http://localhost:8080.
