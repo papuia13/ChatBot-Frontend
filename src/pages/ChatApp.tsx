@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatInterface, { Message } from "@/components/chat/ChatInterface";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useSubscription } from "urql";
 import {
@@ -42,6 +45,14 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const [lastSendAt, setLastSendAt] = useState<number>(0);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar when switching to mobile; open by default on desktop
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+    else setSidebarOpen(true);
+  }, [isMobile]);
 
   // GraphQL: subscribe to chats
   const [chatsSub] = useSubscription({ query: SUB_CHATS });
@@ -292,39 +303,113 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
   const currentChat = chats.find(chat => chat.id === activeChat);
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <ChatSidebar
-        chats={chats}
-        activeChat={activeChat}
-        onChatSelect={setActiveChat}
-        onNewChat={handleNewChat}
-        onSignOut={onSignOut}
-        userName={userName}
-        onRenameChat={handleSidebarRename}
-        onDeleteChat={handleSidebarDelete}
-        onPinToggle={handleSidebarPinToggle}
-      />
-
-      {activeChat ? (
-        <ChatInterface
-          messages={currentChat?.messages ?? []}
-          onSendMessage={handleSendMessage}
-          isTyping={isTyping}
-          chatTitle={currentChat?.title ?? "New Chat"}
-          onRenameTitle={handleRenameTitle}
+    <div className="h-screen relative bg-background overflow-hidden">
+      {/* Desktop layout: persistent sidebar */}
+      <div className="hidden md:flex h-full">
+        <ChatSidebar
+          chats={chats}
+          activeChat={activeChat}
+          onChatSelect={setActiveChat}
+          onNewChat={handleNewChat}
+          onSignOut={onSignOut}
+          userName={userName}
+          onRenameChat={handleSidebarRename}
+          onDeleteChat={handleSidebarDelete}
+          onPinToggle={handleSidebarPinToggle}
         />
-      ) : (
-        <div className="flex-1 flex items-center justify-center bg-background">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-foreground mb-2">
-              Select a chat to start
-            </h2>
-            <p className="text-muted-foreground">
-              Choose an existing conversation or create a new one
-            </p>
+
+        {activeChat ? (
+          <div className="flex-1 flex">
+            <ChatInterface
+              messages={currentChat?.messages ?? []}
+              onSendMessage={handleSendMessage}
+              isTyping={isTyping}
+              chatTitle={currentChat?.title ?? "New Chat"}
+              onRenameTitle={handleRenameTitle}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-background">
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold text-foreground mb-2">Select a chat to start</h2>
+              <p className="text-muted-foreground">Choose an existing conversation or create a new one</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile layout: toggleable sidebar overlay */}
+      <div className="md:hidden h-full flex">
+        {/* Toggle button */}
+        {!sidebarOpen && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 left-3 z-30"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open chat menu"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
+
+        {/* Sidebar overlay */}
+        <div
+          className={`fixed inset-y-0 left-0 z-40 w-[85%] max-w-xs transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        >
+          <div className="h-full shadow-2xl">
+            <ChatSidebar
+              chats={chats}
+              activeChat={activeChat}
+              onChatSelect={(id) => {
+                setActiveChat(id);
+                setSidebarOpen(false);
+              }}
+              onNewChat={() => {
+                void handleNewChat();
+                setSidebarOpen(false);
+              }}
+              onSignOut={onSignOut}
+              userName={userName}
+              onRenameChat={handleSidebarRename}
+              onDeleteChat={(id) => {
+                void handleSidebarDelete(id);
+                setSidebarOpen(false);
+              }}
+              onPinToggle={handleSidebarPinToggle}
+            />
           </div>
         </div>
-      )}
+        {/* Backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-30"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Chat area */}
+        <div className="flex-1 flex">
+          {activeChat ? (
+            <div className="flex-1 flex">
+              <ChatInterface
+                messages={currentChat?.messages ?? []}
+                onSendMessage={handleSendMessage}
+                isTyping={isTyping}
+                chatTitle={currentChat?.title ?? "New Chat"}
+                onRenameTitle={handleRenameTitle}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-background">
+              <div className="text-center px-6">
+                <h2 className="text-xl font-semibold text-foreground mb-2">Select a chat to start</h2>
+                <p className="text-muted-foreground">Open the menu to choose a conversation or create a new one</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

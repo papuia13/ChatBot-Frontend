@@ -21,7 +21,6 @@ const Index = () => {
       toast({ title: "Sign in failed", description: error.message });
       return;
     }
-    toast({ title: "Welcome back!", description: "You have successfully signed in." });
   };
 
   const handleSignUp = async (email: string, password: string, name: string) => {
@@ -45,10 +44,6 @@ const Index = () => {
 
   const handleSignOut = () => {
     nhost.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been successfully signed out.",
-    });
   };
 
   if (isAuthenticated) {
