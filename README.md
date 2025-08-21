@@ -4,6 +4,36 @@
 
 This repository contains the Wizard AI chatbot frontend built with Vite + React + TypeScript + Tailwind + shadcn-ui, integrating with Nhost/Hasura and n8n.
 
+## How to Use
+
+### Getting Started
+1. **Access the Chatbot**
+   - Open the deployed application in your web browser
+   - Sign up for a new account or log in if you already have one
+   - Verify your email address (check your inbox and spam folder)
+
+2. **Starting a New Chat**
+   - Click on the "+ New Chat" button in the sidebar
+   - Select a conversation type or template if available
+   - Start typing your message in the input field at the bottom of the chat interface
+
+3. **Chat Features**
+   - Send messages by pressing Enter or clicking the send button
+   - Edit or delete your previous messages (if enabled)
+   - View conversation history in the sidebar
+   - Toggle between light/dark mode using the theme toggle
+
+4. **Managing Conversations**
+   - Rename conversations by clicking on the title in the sidebar
+   - Delete conversations using the trash can icon
+   - Search through your conversation history using the search bar
+
+### Tips for Best Results
+- Be specific with your questions
+- Provide context when needed
+- Break down complex queries into smaller questions
+- Use the "Regenerate" option if you'd like a different response
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
