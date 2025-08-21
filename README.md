@@ -1,11 +1,8 @@
-# 🧙 Wizard AI – Intelligent Chatbot
+# Wizard AI – Chatbot
 
-<div align="center">
-  <p>An intelligent chatbot interface with user authentication, conversation history, and AI-powered responses</p>
-  <img src="public/placeholder.svg" alt="Chatbot Preview" width="600">
-</div>
+A chatbot interface that provides AI-powered responses with user authentication and conversation history.
 
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -20,7 +17,7 @@
 4. Start the dev server: `npm run dev`
 5. Open http://localhost:8080
 
-## 📋 Project Overview
+## About the Project
 
 Wizard AI is a modern chatbot interface that combines:
 
@@ -28,16 +25,14 @@ Wizard AI is a modern chatbot interface that combines:
 - **UI**: shadcn-ui + Tailwind CSS
 - **Backend**: Nhost (Auth + Database)
 - **AI**: OpenRouter API (multiple LLM models)
-- **Workflow Automation**: n8n
 
 ### Key Features
-- 🔐 User authentication & authorization
-- 💬 Real-time chat interface
-- 📚 Conversation history
-- 🎨 Dark/Light mode
-- ⚡ Optimized performance
+- User authentication and authorization
+- Real-time chat interface
+- Conversation history
+- Secure user sessions
 
-## 🔐 Authentication & Security
+## Security & Authentication
 
 ### Nhost Authentication
 - User authentication is handled by Nhost's built-in auth system
@@ -62,7 +57,7 @@ Wizard AI is a modern chatbot interface that combines:
 - JWT tokens are stored in HTTP-only cookies for security
 - Automatic token refresh is handled by the Nhost client
 
-## 🛠️ Complete Setup Guide
+## Complete Setup Guide
 
 ### 1. Nhost Setup
 1. Sign up at [Nhost](https://nhost.io/)
@@ -176,7 +171,7 @@ VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
 3. Access the app at `http://localhost:8080`
 4. The app will handle user authentication automatically through Nhost
 
-## 🎯 How to Use
+## How to Use
 
 ### Getting Started
 1. **Access the Chatbot**
@@ -193,7 +188,6 @@ VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
    - Send messages by pressing Enter or clicking the send button
    - Edit or delete your previous messages (if enabled)
    - View conversation history in the sidebar
-   - Toggle between light/dark mode using the theme toggle
 
 4. **Managing Conversations**
    - Rename conversations by clicking on the title in the sidebar
@@ -246,7 +240,7 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Core Technologies
 - **Frontend**: React 18, TypeScript, Vite
