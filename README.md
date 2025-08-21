@@ -4,42 +4,100 @@
 
 This repository contains the Wizard AI chatbot frontend built with Vite + React + TypeScript + Tailwind + shadcn-ui, integrating with Nhost/Hasura and n8n.
 
-## Development Setup
+## Authentication & Permissions
 
-### Prerequisites
-- Node.js 18+ and npm
-- Nhost CLI (`npm install -g nhost`)
-- Docker (for local Hasura)
-- n8n account
-- OpenRouter API key
+### Nhost Authentication
+- User authentication is handled by Nhost's built-in auth system
+- Supports email/password, social logins (Google, GitHub, etc.), and passwordless login
+- Email verification is required for new signups
+- JWT tokens are automatically managed by the Nhost client
+
+### Hasura Permissions
+- Row-Level Security (RLS) is configured for all tables
+- Users can only access their own data through permission rules:
+  ```sql
+  -- Example permission for messages table
+  CREATE POLICY "Users can view their own messages"
+  ON messages FOR SELECT
+  USING (auth.uid() = user_id);
+  ```
+- All GraphQL operations are protected by JWT verification
+- Custom actions (like `sendMessage`) include permission checks
+
+### Session Management
+- Sessions are managed by Nhost
+- JWT tokens are stored in HTTP-only cookies for security
+- Automatic token refresh is handled by the Nhost client
+
+## Development Setup
 
 ### 1. Nhost Setup
 1. Sign up at [Nhost](https://nhost.io/)
 2. Create a new project and note your subdomain and region
-3. Install Nhost CLI and login:
-   ```bash
-   npm install -g nhost
-   nhost login
+3. Nhost will automatically set up authentication and database for you
+
+### 2. Database Setup in Hasura
+1. From Nhost dashboard, click on "Hasura" to open the Hasura console
+2. In Hasura, create the following tables:
+   - `chats`
+     - id (uuid, primary key, default: `gen_random_uuid()`)
+     - user_id (uuid, foreign key to auth.users)
+     - title (text)
+     - created_at (timestamptz, default: `now()`)
+   - `messages`
+     - id (uuid, primary key, default: `gen_random_uuid()`)
+     - chat_id (uuid, foreign key to chats)
+     - role (text, either 'user' or 'assistant')
+     - content (text)
+     - created_at (timestamptz, default: `now()`)
+
+3. Set up permissions:
+   - For both tables, create a role `user` with:
+     - Select: With custom check `{"user_id":{"_eq":"X-Hasura-User-Id"}}`
+     - Insert: With same custom check
+     - Update/Delete: With same custom check
+
+### 3. Create Action for Sending Messages
+1. In Hasura, go to "Actions" tab
+2. Create a new action named `sendMessage` with handler URL from n8n (see next section)
+3. Define input type:
+   ```graphql
+   chat_id: uuid!
+   content: String!
+   role: String!
    ```
-4. Link your project:
-   ```bash
-   nhost link
-   ```
+4. Define output type: `message: messages`
+5. Configure webhook handler and forward client headers
 
-### 2. Hasura Configuration
-1. Enable Hasura in your Nhost dashboard
-2. Set up your database schema and relationships
-3. Configure permissions and roles as needed
-4. Set up event triggers for real-time functionality
+### 4. n8n Workflow Setup
 
-### 3. n8n Integration
-1. Create an account at [n8n.io](https://n8n.io/)
-2. Set up a new workflow
-3. Add the Webhook node and configure it to receive requests
-4. Add the OpenRouter node and configure with your API key
-5. Set up any additional processing nodes as needed
+#### Option 1: Import Pre-configured Workflow
+1. In n8n, click on the "Workflows" menu
+2. Click the "+ New" button and select "Import from File"
+3. Select the file `docs/n8n-workflow-export.json` from this repository
+4. After importing, update the following values in the workflow:
+   - In the "Hasura: Fetch History" node, set your Nhost Hasura URL
+   - In the "OpenRouter: Chat Completions" node:
+     - Update `YOUR_OPENROUTER_API_KEY` with your actual OpenRouter API key
+     - Set `YOUR_SITE_URL` to your application's URL
+     - Update `Your App Name` to your application's name
 
-### 4. Environment Variables
+#### Option 2: Manual Setup
+1. Create a new workflow in n8n
+2. Add a Webhook node and configure it to receive POST requests
+3. Add a Function node to process the incoming message
+4. Add an HTTP Request node to call OpenRouter API
+   - Method: POST
+   - URL: `https://openrouter.ai/api/v1/chat/completions`
+   - Headers:
+     - `Authorization: Bearer YOUR_OPENROUTER_API_KEY`
+     - `HTTP-Referer: YOUR_SITE_URL`
+     - `X-Title: YOUR_APP_NAME`
+5. Add a Response node to send back the AI response
+
+For detailed node configurations, refer to the exported workflow in `docs/n8n-workflow-export.json`
+
+### 5. Environment Setup
 Create a `.env` file in the root directory with:
 ```
 VITE_NHOST_SUBDOMAIN=your-nhost-subdomain
@@ -48,7 +106,7 @@ VITE_OPENROUTER_API_KEY=your-openrouter-key
 VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
 ```
 
-### 5. Running Locally
+### 6. Running the Application
 1. Install dependencies:
    ```bash
    npm install
@@ -58,6 +116,7 @@ VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
    npm run dev
    ```
 3. Access the app at `http://localhost:8080`
+4. The app will handle user authentication automatically through Nhost
 
 ## How to Use
 

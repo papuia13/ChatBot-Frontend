@@ -1,0 +1,131 @@
+{
+  "name": "Workflow-OpenRouter",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/send-message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-2736, -64],
+      "name": "Webhook: Hasura sendMessage",
+      "webhookId": "send-message-rls-no-precheck"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Input + Auth (robust for Hasura Action body)\nconst j = (items[0] && items[0].json) || {};\nconst body = j.body || {};\nconst headers = j.headers || {};\n\nconst input = body.input || {};\nconst action = body.action || {};\nconst actionInput = action.input || {};\nconst nestedInput = input.input || {};\n\nfunction pickPath(obj, paths) {\n  for (const p of paths) {\n    const val = p.split('.').reduce((a, k) => (a && a[k] != null ? a[k] : undefined), obj);\n    if (val !== undefined && val !== null && val !== '') return { value: val, path: p };\n  }\n  return { value: undefined, path: undefined };\n}\n\nconst chatPick = pickPath(body, [\n  'input.chat_id',\n  'input.input.chat_id',\n  'action.input.chat_id'\n]);\n\nconst contentPick = pickPath(body, [\n  'input.content',\n  'input.input.content',\n  'action.input.content'\n]);\n\nconst sessionVars =\n  body.session_variables || body.sessionVariables ||\n  j.session_variables || j.sessionVariables || {};\n\nconst user_id =\n  sessionVars['x-hasura-user-id'] ||\n  sessionVars['X-Hasura-User-Id'] ||\n  j.user_id;\n\nconst authorization = headers.authorization || headers.Authorization;\n\n// Ensure strings (Hasura uuid) and trim\nconst chat_id = chatPick.value ? String(chatPick.value).trim() : undefined;\nconst content = contentPick.value ? String(contentPick.value) : undefined;\n\nreturn [{\n  json: {\n    chat_id,\n    content,\n    user_id,\n    authorization,\n    debug: {\n      sawBody: Object.keys(body).length > 0,\n      bodyKeys: Object.keys(body || {}),\n      inputEcho: { input, nestedInput, actionInput },\n      foundPaths: {\n        chat_id: chatPick.path || null,\n        content: contentPick.path || null\n      },\n      hasAuthHeader: Boolean(authorization)\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-2496, -64],
+      "name": "Extract Input + Auth"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build GraphQL body: Fetch History\nconst chat_id = $node[\"Extract Input + Auth\"].json?.chat_id;\nreturn [{\n  json: {\n    body: {\n      query: `\\n        query ($chat_id: uuid!, $limit: Int!) {\\n          messages(\\n            where: { chat_id: { _eq: $chat_id } },\\n            order_by: { created_at: asc },\\n            limit: $limit\\n          ) {\\n            role\\n            content\\n          }\\n        }\\n      `,\n      variables: { chat_id, limit: 20 }\n    },\n    debug: { chat_id }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-2256, -64],
+      "name": "Build Body: Fetch History"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=YOUR_NHOST_HASURA_URL",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{$node[\"Extract Input + Auth\"].json.authorization}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$node[\"Build Body: Fetch History\"].json.body}}",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-2048, -64],
+      "name": "Hasura: Fetch History"
+    },
+    {
+      "parameters": {
+        "jsCode": "const history = $node[\"Hasura: Fetch History\"].json?.data?.messages ?? [];\nlet userMsg = $node[\"Extract Input + Auth\"].json.content;\nif (!userMsg || typeof userMsg !== 'string' || !userMsg.trim()) userMsg = \"Hello\";\nconst messages = [\n  { role: \"system\", content: \"You are a helpful assistant. Be concise and accurate.\" },\n  ...history.map(m => ({ role: m.role, content: m.content })),\n  { role: \"user\", content: userMsg }\n];\nconst chat_id = $node[\"Extract Input + Auth\"].json?.chat_id;\n// Prefer a less rate-limited free model\nconst model = \"nvidia/llama-3.1-nemotron-ultra-253b-v1:free\";\nreturn [{ json: { model, messages, chat_id } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1856, -64],
+      "name": "Build OpenRouter Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "YOUR_SITE_URL"
+            },
+            {
+              "name": "X-Title",
+              "value": "Your App Name"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$node[\"Build OpenRouter Request\"].json}}",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1504, -64],
+      "name": "OpenRouter: Chat Completions"
+    }
+  ],
+  "connections": {
+    "Webhook: Hasura sendMessage": {
+      "main": [[{ "node": "Extract Input + Auth", "type": "main", "index": 0 }]]
+    },
+    "Extract Input + Auth": {
+      "main": [[{ "node": "Build Body: Fetch History", "type": "main", "index": 0 }]]
+    },
+    "Build Body: Fetch History": {
+      "main": [[{ "node": "Hasura: Fetch History", "type": "main", "index": 0 }]]
+    },
+    "Hasura: Fetch History": {
+      "main": [[{ "node": "Build OpenRouter Request", "type": "main", "index": 0 }]]
+    },
+    "Build OpenRouter Request": {
+      "main": [[{ "node": "OpenRouter: Chat Completions", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
