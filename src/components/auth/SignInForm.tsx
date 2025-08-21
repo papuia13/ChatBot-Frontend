@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "./AuthLayout";
+import { Eye, EyeOff } from "lucide-react";
 
 interface SignInFormProps {
   onSwitchToSignUp: () => void;
@@ -12,6 +13,7 @@ interface SignInFormProps {
 const SignInForm = ({ onSwitchToSignUp, onSignIn }: SignInFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,15 +50,29 @@ const SignInForm = ({ onSwitchToSignUp, onSignIn }: SignInFormProps) => {
           <Label htmlFor="password" className="text-sm font-medium">
             Password
           </Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-chat-input border-border/50 focus:border-primary transition-colors"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="bg-chat-input border-border/50 focus:border-primary transition-colors pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         <Button
