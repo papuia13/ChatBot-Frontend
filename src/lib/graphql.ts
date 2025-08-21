@@ -41,8 +41,10 @@ export const MUT_INSERT_USER_MESSAGE = gql/* GraphQL */ `
 
 export const MUT_SEND_MESSAGE = gql/* GraphQL */ `
   mutation SendMessage($chat_id: uuid!, $content: String!) {
-    sendMessage(chat_id: $chat_id, content: $content) {
-      assistant_message_id
+    sendMessage(input: { chat_id: $chat_id, content: $content }) {
+      id
+      chat_id
+      role
       content
       created_at
     }

@@ -89,8 +89,12 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
   };
 
   const handleSendMessage = async (content: string) => {
-    if (!activeChat) return;
+    if (!activeChat) {
+      toast({ title: "No active chat", description: "Select or create a chat first." });
+      return;
+    }
     // Insert user message
+    console.log("insertUserMessage vars", { chat_id: activeChat, content });
     const insertRes = await insertUserMessage({ chat_id: activeChat, content });
     if (insertRes.error) {
       toast({ title: "Failed to send", description: insertRes.error.message });
@@ -98,6 +102,7 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
     }
     // Show typing while Action runs. Assistant message will arrive via subscription.
     setIsTyping(true);
+    console.log("sendMessageAction vars", { chat_id: activeChat, content });
     const actionRes = await sendMessageAction({ chat_id: activeChat, content });
     if (actionRes.error) {
       toast({ title: "Bot error", description: actionRes.error.message });
@@ -117,7 +122,7 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
         onSignOut={onSignOut}
         userName={userName}
       />
-      
+
       {activeChat && currentChat ? (
         <ChatInterface
           messages={currentChat.messages}
