@@ -34,7 +34,13 @@ const Index = () => {
       toast({ title: "Sign up failed", description: error.message });
       return;
     }
-    toast({ title: "Account created!", description: "Check your email if verification is required." });
+    toast({
+      title: "Verify your email",
+      description:
+        "We've sent a verification link to your email. Please check your Inbox and Spam folder. You cannot sign in until your email is verified.",
+    });
+    // Redirect to sign-in after sending verification
+    setIsSignUp(false);
   };
 
   const handleSignOut = () => {

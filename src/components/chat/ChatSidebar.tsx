@@ -1,7 +1,9 @@
-import { Plus, MessageSquare, LogOut, MoreVertical, Pencil, Pin, Trash2 } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Pin, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +59,7 @@ function formatTimestamp(iso: string): string {
   return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: now.getFullYear() === d.getFullYear() ? undefined : "2-digit" });
 }
 
+
 const ChatSidebar = ({ 
   chats, 
   activeChat, 
@@ -68,6 +71,25 @@ const ChatSidebar = ({
   onDeleteChat,
   onPinToggle,
 }: ChatSidebarProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [titleDraft, setTitleDraft] = useState<string>("");
+
+  const startEdit = (chatId: string, currentTitle: string) => {
+    setEditingId(chatId);
+    setTitleDraft(currentTitle);
+  };
+
+  const commitEdit = async (chatId: string) => {
+    const next = titleDraft.trim();
+    setEditingId(null);
+    if (!next || next === chats.find(c => c.id === chatId)?.title) return;
+    try {
+      await onRenameChat?.(chatId, next);
+    } catch {
+      // no-op; parent shows toast on error
+    }
+  };
+
   return (
     <div className="w-80 bg-chat-sidebar border-r border-border/50 flex flex-col h-full overflow-x-hidden">
       {/* Header */}
@@ -102,12 +124,36 @@ const ChatSidebar = ({
                     {chat.pinned && (
                       <Pin className="w-3.5 h-3.5 text-primary flex-none" />
                     )}
-                    <h3
-                      className="font-medium text-sm text-foreground overflow-hidden whitespace-nowrap"
-                      style={{ WebkitMaskImage: "linear-gradient(90deg, #000 0, #000 20ch, rgba(0,0,0,0) 30ch, rgba(0,0,0,0) 100%)", maskImage: "linear-gradient(90deg, #000 0, #000 20ch, rgba(0,0,0,0) 30ch, rgba(0,0,0,0) 100%)" }}
-                    >
-                      {chat.title}
-                    </h3>
+                    {editingId === chat.id ? (
+                      <Input
+                        value={titleDraft}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        className="font-medium text-sm h-7 py-0 px-2 max-w-[75%]"
+                        autoFocus
+                        onFocus={(e) => e.currentTarget.select()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            commitEdit(chat.id);
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setEditingId(null);
+                          }
+                        }}
+                        onBlur={() => commitEdit(chat.id)}
+                      />
+                    ) : (
+                      <h3
+                        className="font-medium text-sm text-foreground overflow-hidden whitespace-nowrap"
+                        style={{ WebkitMaskImage: "linear-gradient(90deg, #000 0, #000 20ch, rgba(0,0,0,0) 30ch, rgba(0,0,0,0) 100%)", maskImage: "linear-gradient(90deg, #000 0, #000 20ch, rgba(0,0,0,0) 30ch, rgba(0,0,0,0) 100%)" }}
+                        onDoubleClick={(e) => { e.stopPropagation(); startEdit(chat.id, chat.title); }}
+                        title="Double-click to rename"
+                      >
+                        {chat.title}
+                      </h3>
+                    )}
                   </div>
                   <p
                     className="text-xs text-muted-foreground mt-1 overflow-hidden whitespace-nowrap"
@@ -136,10 +182,7 @@ const ChatSidebar = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenuItem
-                    onClick={() => {
-                      const name = window.prompt("Rename chat", chat.title);
-                      if (name && name.trim()) onRenameChat?.(chat.id, name.trim());
-                    }}
+                    onClick={() => startEdit(chat.id, chat.title)}
                   >
                     <Pencil className="w-4 h-4 mr-2" /> Rename
                   </DropdownMenuItem>
@@ -147,9 +190,7 @@ const ChatSidebar = ({
                     <Pin className="w-4 h-4 mr-2" /> {chat.pinned ? "Unpin" : "Pin"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => {
-                      if (window.confirm("Delete this chat?")) onDeleteChat?.(chat.id);
-                    }}
+                    onClick={() => onDeleteChat?.(chat.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" /> Delete
                   </DropdownMenuItem>

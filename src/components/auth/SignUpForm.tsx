@@ -32,12 +32,12 @@ const SignUpForm = ({ onSwitchToSignIn, onSignUp }: SignUpFormProps) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name" className="text-sm font-medium">
-            Full Name
+            Display Name
           </Label>
           <Input
             id="name"
             type="text"
-            placeholder="Enter your full name"
+            placeholder="Enter your display name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -82,6 +82,12 @@ const SignUpForm = ({ onSwitchToSignIn, onSignUp }: SignUpFormProps) => {
         >
           {isLoading ? "Creating account..." : "Create Account"}
         </Button>
+
+        <p className="text-xs text-muted-foreground text-center">
+          We will send a verification link to your email. Please check your Inbox
+          and <span className="font-medium">Spam</span> folder. You cannot sign in until your
+          email is verified.
+        </p>
       </form>
 
       <div className="text-center">

@@ -67,6 +67,8 @@ After deploy, verify:
 - Page title, favicon, and social cards render correctly.
 - API/auth flows against Nhost work in production.
 
+> Important: Users must verify their email before they can sign in. Ask them to check their Inbox and Spam folder for the verification email.
+
 ## Local development
 
 The dev server runs on the port configured in `vite.config.ts` (currently `8080`). Visit http://localhost:8080.

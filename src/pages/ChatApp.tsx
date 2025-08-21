@@ -40,6 +40,7 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
   });
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [lastSendAt, setLastSendAt] = useState<number>(0);
   const { toast } = useToast();
 
   // GraphQL: subscribe to chats
@@ -181,7 +182,7 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
       // Replace temp chat id with real id and keep it active
       setChats(prev => prev.map(c => c.id === tempId ? { ...c, id } : c));
       setActiveChat(id);
-      toast({ title: "New chat created", description: "You can start a new conversation now." });
+      // Removed success toast on new chat creation
     }
   };
 
@@ -239,6 +240,13 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
       toast({ title: "No active chat", description: "Select or create a chat first." });
       return;
     }
+    // Simple cooldown to avoid spamming the backend and hitting rate limits
+    const nowMs = Date.now();
+    if (nowMs - lastSendAt < 1000) {
+      toast({ title: "Please wait", description: "You're sending messages too quickly. Try again in a second." });
+      return;
+    }
+    setLastSendAt(nowMs);
     const nowIso = new Date().toISOString();
     const tempId = `temp-${Date.now()}`;
     const preview = (text: string, max = 30) => {
@@ -271,7 +279,12 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
     console.log("sendMessageAction vars", { chat_id: activeChat, content });
     const actionRes = await sendMessageAction({ chat_id: activeChat, content });
     if (actionRes.error) {
-      toast({ title: "Bot error", description: actionRes.error.message });
+      const msg = actionRes.error.message || "";
+      if (/429|rate limit/i.test(msg)) {
+        toast({ title: "Rate limit reached", description: "Too many requests. Please wait a moment and try again." });
+      } else {
+        toast({ title: "Bot error", description: msg });
+      }
     }
     setIsTyping(false);
   };
