@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, Pencil, Check, X, Menu } from "lucide-react";
+import { Send, Bot, Pencil, Check, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -94,6 +94,7 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
                 className="max-w-sm"
                 placeholder="Chat title"
                 autoFocus
+                onBlur={cancelEdit}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -104,11 +105,8 @@ const ChatInterface = ({ messages, onSendMessage, isTyping, chatTitle, onRenameT
                   }
                 }}
               />
-              <Button size="sm" onClick={saveEdit} className="bg-primary hover:bg-primary-glow">
+              <Button size="sm" onMouseDown={(e) => e.preventDefault()} onClick={saveEdit} className="bg-primary hover:bg-primary-glow">
                 <Check className="w-4 h-4" />
-              </Button>
-              <Button size="sm" variant="ghost" onClick={cancelEdit}>
-                <X className="w-4 h-4" />
               </Button>
             </>
           ) : (

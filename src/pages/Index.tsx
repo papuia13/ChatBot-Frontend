@@ -10,9 +10,10 @@ const Index = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const { isAuthenticated } = useAuthenticationStatus();
   const user = useUserData();
-  const userName =
-    (user?.displayName as string | undefined) ||
-    (user?.email ? user.email.split("@")[0] : "");
+  const userEmail = user?.email || "";
+  const metaName = (user as any)?.metadata?.displayName as string | undefined;
+  const directDisplay = (user?.displayName as string | undefined);
+  const userDisplayName = metaName || directDisplay || (userEmail ? userEmail.split("@")[0] : "");
   const { toast } = useToast();
 
   const handleSignIn = async (email: string, password: string) => {
@@ -47,7 +48,13 @@ const Index = () => {
   };
 
   if (isAuthenticated) {
-    return <ChatApp userName={userName} onSignOut={handleSignOut} />;
+    return (
+      <ChatApp
+        userDisplayName={userDisplayName}
+        userEmail={userEmail}
+        onSignOut={handleSignOut}
+      />
+    );
   }
 
   return isSignUp ? (

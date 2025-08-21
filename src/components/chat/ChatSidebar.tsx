@@ -25,7 +25,8 @@ interface ChatSidebarProps {
   onChatSelect: (chatId: string) => void;
   onNewChat: () => void;
   onSignOut: () => void;
-  userName: string;
+  userDisplayName: string;
+  userEmail: string;
   onRenameChat?: (chatId: string, newTitle: string) => void | Promise<void>;
   onDeleteChat?: (chatId: string) => void | Promise<void>;
   onPinToggle?: (chatId: string) => void | Promise<void>;
@@ -66,7 +67,8 @@ const ChatSidebar = ({
   onChatSelect, 
   onNewChat, 
   onSignOut,
-  userName,
+  userDisplayName,
+  userEmail,
   onRenameChat,
   onDeleteChat,
   onPinToggle,
@@ -216,12 +218,15 @@ const ChatSidebar = ({
           <div className="flex items-center gap-3">
             <Avatar className="w-8 h-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                {userName.charAt(0).toUpperCase()}
+                {(userDisplayName || userEmail).charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {userName}
+                {userDisplayName || userEmail.split("@")[0]}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {userEmail}
               </p>
             </div>
           </div>

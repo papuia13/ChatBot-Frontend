@@ -26,11 +26,12 @@ interface Chat {
 }
 
 interface ChatAppProps {
-  userName: string;
+  userDisplayName: string;
+  userEmail: string;
   onSignOut: () => void;
 }
 
-const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
+const ChatApp = ({ userDisplayName, userEmail, onSignOut }: ChatAppProps) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
     try {
@@ -312,7 +313,8 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
           onChatSelect={setActiveChat}
           onNewChat={handleNewChat}
           onSignOut={onSignOut}
-          userName={userName}
+          userDisplayName={userDisplayName}
+          userEmail={userEmail}
           onRenameChat={handleSidebarRename}
           onDeleteChat={handleSidebarDelete}
           onPinToggle={handleSidebarPinToggle}
@@ -370,7 +372,8 @@ const ChatApp = ({ userName, onSignOut }: ChatAppProps) => {
                 setSidebarOpen(false);
               }}
               onSignOut={onSignOut}
-              userName={userName}
+              userDisplayName={userDisplayName}
+              userEmail={userEmail}
               onRenameChat={handleSidebarRename}
               onDeleteChat={(id) => {
                 void handleSidebarDelete(id);
